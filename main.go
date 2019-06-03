@@ -63,6 +63,8 @@ func update(w http.ResponseWriter, r *http.Request) {
 	client := godo.NewClient(oauth2.NewClient(context.Background(), tokenSource))
 	ctx := context.TODO()
 
+	logrus.WithFields(logrus.Fields{"host": host, "ip": ip}).Info("new update")
+
 	domains, err := domainList(ctx, client, domainutil.Domain(host))
 	if err != nil {
 		logrus.WithError(err).Error("get domains")
