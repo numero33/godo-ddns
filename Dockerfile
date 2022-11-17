@@ -1,11 +1,9 @@
-FROM golang:alpine
-ADD . /go/src/godo-ddns/
-WORKDIR /go/src/godo-ddns/
+FROM alpine:latest
 
-RUN apk --update --no-cache add git \
-&& rm -rf /var/cache/apk/* \
-&& go get ./... \
-&& go build \
-&& chmod +x /go/bin/godo-ddns \
-&& rm -rf /go/src
-ENTRYPOINT ["/go/bin/godo-ddns"]
+RUN apk --update --no-cache add ca-certificates && rm -rf /var/cache/apk/*
+
+COPY godo-ddns /godo-ddns
+
+RUN chmod +x /godo-ddns
+
+ENTRYPOINT ["/godo-ddns"]

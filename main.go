@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/bobesa/go-domain-util/domainutil"
 	"github.com/digitalocean/godo"
 	"github.com/sirupsen/logrus"
+	"github.com/weppos/publicsuffix-go/publicsuffix"
 	"golang.org/x/oauth2"
 	"net/http"
 	"os"
@@ -44,7 +44,8 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 func update(w http.ResponseWriter, r *http.Request) {
 	host := r.URL.Query().Get("h")
 
-	if !domainutil.HasSubdomain(host) || len(domainutil.Domain(host)) <= 3 {
+	parsedHost, err := publicsuffix.Parse(host)
+	if err != nil {
 		logrus.WithField("host", host).Error("host error")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`notfqdn`))
@@ -65,7 +66,7 @@ func update(w http.ResponseWriter, r *http.Request) {
 
 	logrus.WithFields(logrus.Fields{"host": host, "ip": ip}).Info("new update")
 
-	domains, err := domainList(ctx, client, domainutil.Domain(host))
+	domains, err := domainList(ctx, client, parsedHost.SLD+"."+parsedHost.TLD)
 	if err != nil {
 		logrus.WithError(err).Error("get domains")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -74,7 +75,7 @@ func update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, d := range domains {
-		if d.Name == domainutil.Subdomain(host) {
+		if d.Name == parsedHost.TRD {
 
 			if d.Data == ip {
 				w.Write([]byte(`nochg ` + ip))
@@ -85,7 +86,7 @@ func update(w http.ResponseWriter, r *http.Request) {
 				Data: ip,
 			}
 
-			domainRecord, _, err := client.Domains.EditRecord(ctx, domainutil.Domain(host), d.ID, editRequest)
+			domainRecord, _, err := client.Domains.EditRecord(ctx, parsedHost.SLD+"."+parsedHost.TLD, d.ID, editRequest)
 			if err != nil {
 				logrus.WithError(err).Error("get domains")
 				w.WriteHeader(http.StatusInternalServerError)
