@@ -8,7 +8,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Check out the repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Use GoLang '^1.19'
               uses: actions/setup-go@v4
@@ -35,7 +35,7 @@ jobs:
         runs-on: [ubuntu-latest]
         steps:
             - name: Check out the repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Download build
               uses: actions/download-artifact@v3
